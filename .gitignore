@@ -23,6 +23,7 @@
 
 # Compiled source
 bin/
+bin/*
 lib/
 *.a
 *.so

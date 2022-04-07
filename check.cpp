@@ -82,6 +82,29 @@ void prepare_dataset(){
 	}
 }
 
+bool check_bitset_and(){
+	auto cl1 = ConcurrentBitset(N_BITS, DatasetL.data());
+	auto cr1 = ConcurrentBitset(N_BITS, DatasetR.data());
+	auto c_1 = cl1&cr1;
+	auto cl2 = ConcurrentBitset2(N_BITS, DatasetL.data());
+	auto cr2 = ConcurrentBitset2(N_BITS, DatasetR.data());
+	auto c_2 = cl2&cr2;
+
+	auto viewL = BitsetView(DatasetL.data(), N_BITS);
+  	auto x = view_to_string(viewL);
+  	auto bl = BitsetType(x);
+
+	auto viewR = BitsetView(DatasetR.data(), N_BITS);
+ 	auto y = view_to_string(viewR);
+  	auto br = BitsetType(y);
+
+	auto b_1 = bl&br;
+	auto flag1 = check_boost_concurrent(b_1, *c_1);
+	auto flag2 = check_boost_concurrent2(b_1, *c_2);
+
+	return flag1 && flag2;
+}
+
 bool check_bitset_and_assign(){
 	auto cl1 = ConcurrentBitset(N_BITS, DatasetL.data());
 	auto cr1 = ConcurrentBitset(N_BITS, DatasetR.data());
@@ -93,7 +116,7 @@ bool check_bitset_and_assign(){
 
 	cl2 &= cr2;
 
-	auto viewL = BitsetView(DatasetR.data(), N_BITS);
+	auto viewL = BitsetView(DatasetL.data(), N_BITS);
  	auto x = view_to_string(viewL);
   	auto bl = BitsetType(x);
 
@@ -101,7 +124,7 @@ bool check_bitset_and_assign(){
  	auto y = view_to_string(viewR);
   	auto br = BitsetType(y);
 
-	bl&= br;
+	bl &= br;
 
 	auto flag1 = check_boost_concurrent(bl, cl1);
 	auto flag2 = check_boost_concurrent2(bl, cl2);
@@ -178,35 +201,20 @@ bool check_bitset_or(){
 	return flag1 && flag2;
 }
 
-bool check_bitset_and(){
-	auto cl1 = ConcurrentBitset(N_BITS, DatasetL.data());
-	auto cr1 = ConcurrentBitset(N_BITS, DatasetR.data());
-	auto c_1 = cl1&cr1;
-	auto cl2 = ConcurrentBitset2(N_BITS, DatasetL.data());
-	auto cr2 = ConcurrentBitset2(N_BITS, DatasetR.data());
-	auto c_2 = cl2&cr2;
 
-	auto viewL = BitsetView(DatasetL.data(), N_BITS);
-  	auto x = view_to_string(viewL);
-  	auto bl = BitsetType(x);
-
-	auto viewR = BitsetView(DatasetR.data(), N_BITS);
- 	auto y = view_to_string(viewR);
-  	auto br = BitsetType(y);
-
-	auto b_1 = bl&br;
-	auto flag1 = check_boost_concurrent(b_1, *c_1);
-	auto flag2 = check_boost_concurrent2(b_1, *c_2);
-
-	return flag1 && flag2;
-}
 
 bool check_bitset_flip(){
 	auto cl1 = ConcurrentBitset(N_BITS, DatasetL.data());
+	auto v1 =  BitsetView(cl1);
 	cl1.negate();
 
+
 	auto cl2 = ConcurrentBitset2(N_BITS, DatasetL.data());
+	auto v2 = BitsetView(cl2);
 	cl2.negate();
+
+	//std::cout<<"A:"<<std::string(v1)<<std::endl;
+	//std::cout<<"B:"<<std::string(v2)<<std::endl;
 
 	auto viewL = BitsetView(DatasetL.data(), N_BITS);
   	auto x = view_to_string(viewL);
@@ -229,7 +237,7 @@ bool check_bitset_or_assign() {
 
 	cl2 |= cr2;
 
-	auto viewL = BitsetView(DatasetR.data(), N_BITS);
+	auto viewL = BitsetView(DatasetL.data(), N_BITS);
  	auto x = view_to_string(viewL);
   	auto bl = BitsetType(x);
 
@@ -260,16 +268,6 @@ std::string view_to_string(BitsetView & view){
     return s;
 }
 
-void print_test(std::string func_name, bool is_end){
-	std::string title = "";
-	title = "Test";
-	std::string done = "";
-	if (is_end) {
-		done = " ...Done";	
-	}
-        std::cout<< title << ":" << "\t"<< func_name << done << std::endl;
-}
-
 MapType CheckFuncMap = {
 	{ "clear", check_bitset_clear},
 	{ "set", check_bitset_set},
@@ -284,11 +282,9 @@ void check_test(std::string func_name){
 	auto it = CheckFuncMap.find(func_name);
 	 if (it != CheckFuncMap.end()) {
 		 auto func = it->second;
-  		 print_test(func_name, false);
 		 auto ret =  func();
 		 auto retStr = ret ? "Equal" : "NotEqual";
-		 std::cout << retStr<<std::endl;
-  		 print_test(func_name, true);
+		 std::cout << func_name << ":\t"<< retStr<<std::endl;
     	}else{
 		std::cout<<"Not match any function!" << std::endl;
 	}
@@ -298,18 +294,23 @@ bool check_boost_concurrent(const BitsetType &l, const ConcurrentBitset &h){
   	auto v1 =  BitsetView((uint8_t*)boost_ext::get_data(l), l.size());
 	auto v2 = BitsetView(h);
 	bool ret = v1 == v2;
-	std::cout << "check1:" << ret <<std::endl;
+//	std::cout << "check1:" << ret <<std::endl;
+//	std::cout << "v1:"<< std::string(v1) << std::endl;
+//	std::cout << "v2:"<< std::string(v2) << std::endl;
 	return ret;
 }
 
 bool check_boost_concurrent2(const BitsetType &l, const ConcurrentBitset2 &h){
+//	return true;
+	
   	auto v1 =  BitsetView((uint8_t*)boost_ext::get_data(l), l.size());
 	auto v2 = BitsetView(h);
 	bool ret = v1 == v2;
-	std::cout << "check2:" << ret <<std::endl;
-	std::cout << "check2:v1:" << std::string(v1) <<std::endl;
-	std::cout << "check2:v2:" << std::string(v2) <<std::endl;
+//	std::cout << "check2:" << ret <<std::endl;
+//	std::cout << "check2:v1:" << std::string(v1) <<std::endl;
+//	std::cout << "check2:v2:" << std::string(v2) <<std::endl;
 	return ret;
+	
 }
 
 int main() {

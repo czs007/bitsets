@@ -88,7 +88,6 @@ append_flags( CMAKE_CXX_FLAGS
               FLAGS
               "-fPIC"
               "-DELPP_THREAD_SAFE"
-              "-fopenmp"
               "-Werror"
               )
 endif ()

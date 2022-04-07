@@ -24,8 +24,8 @@
 
 using MapType = std::map<std::string, std::function<double(int)>>;
 
-using ConcurrentBitset2 = bitsets::ConcurrentBitset2;
-using ConcurrentBitset = bitsets::ConcurrentBitset;
+//using ConcurrentBitset2 = bitsets::ConcurrentBitset2;
+using ConcurrentBitset = bitsets::ConcurrentBitset2;
 using BitsetType = bitsets::BitsetType;
 using BitsetView = bitsets::BitsetView;
 
@@ -132,7 +132,7 @@ double test_concurrent_bitset_clear(int round){
     	Timer timer;
 
 	for (int i =0; i < round; i++){
-		for (int j =0; j<N; j++){
+		for (int j =0; j<N_BITS; j++){
 		  l.clear(ConcurrentBitset::id_type_t(j));
 		}
 	}	
@@ -144,7 +144,7 @@ double test_concurrent_bitset_set(int round){
     	Timer timer;
 
 	for (int i =0; i < round; i++){
-		for (int j =0; j<N; j++){
+		for (int j =0; j<N_BITS; j++){
 		  l.set(ConcurrentBitset::id_type_t(j));
 		}
 	}	
@@ -204,7 +204,7 @@ double test_boost_dynamic_bitset_clear(int round){
 
     	Timer timer;
 	for (int i =0; i < round; i++){
-		for (int j =0; j<N; j++){
+		for (int j =0; j<N_BITS; j++){
 		  l.reset(j);
 		}
 	}	
@@ -219,7 +219,7 @@ double test_boost_dynamic_bitset_set(int round){
 
     	Timer timer;
 	for (int i =0; i < round; i++){
-		for (int j =0; j<N; j++){
+		for (int j =0; j<N_BITS; j++){
 		  l.set(j);
 		}
 	}
@@ -387,13 +387,11 @@ MapType ConcurrentFuncMap = {
 };
 
 void boost_test(std::string func_name, int round){
-    	Timer timer;
 	auto it = BoostFuncMap.find(func_name);
 	 if (it != BoostFuncMap.end()) {
 		 auto func = it->second;
-  		 print_start(MODE_BOOST_BITSET, func_name);
 		 auto secs =  func(round);
-  		 print_end(MODE_BOOST_BITSET, func_name, secs);
+		 std::cout << func_name << ":\t" << secs << " seconds." <<  std::endl;
     	}else{
 		std::cout<<"Not match any function!" << std::endl;
 	}
@@ -401,13 +399,11 @@ void boost_test(std::string func_name, int round){
 
 
 void concurrent_test(std::string func_name, int round){
-	Timer timer;
 	auto it = ConcurrentFuncMap.find(func_name);
 	 if (it != ConcurrentFuncMap.end()) {
 		 auto func = it->second;
-  		 print_start(MODE_CURRENT_BITSET, func_name);
 		 auto secs =  func(round);
-  		 print_end(MODE_CURRENT_BITSET, func_name, secs);
+		 std::cout << func_name << ":\t" << secs << " seconds." <<  std::endl;
     	}else{
 		std::cout<<"Not match any function!" << std::endl;
 	}
@@ -428,9 +424,7 @@ double test_boost_resize(bool value, int round){
 }
 
 int main() {
-  std::string func_name = "";
   int round = 10000;
-
   gen_random_data();
   prepare_dataset();
   std::cout<<"GenerateDataset done"<<std::endl;
@@ -445,8 +439,13 @@ int main() {
 	"&",
   };
 
+  std::cout<<"Boost dynamic bitset:"<<std::endl;
   for (const auto & func_name : keys){
   	boost_test(func_name, round);
+  }
+
+  std::cout<<"ConcurrentBitset    :"<<std::endl;
+  for (const auto & func_name : keys){
   	concurrent_test(func_name, round);
   }
 

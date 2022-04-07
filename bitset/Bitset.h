@@ -76,20 +76,20 @@ class ConcurrentBitset {
 
     inline bool
     test(id_type_t id) const {
-        uint8_t mask = (uint8_t)(0x01) << (id & 0x07);
-        return bitset_[id >> 3] & mask;
+        unsigned char mask = (unsigned char)(0x01) << (id & 0x07);
+        return (bitset_[id >> 3].load() & mask);
     }
 
     inline void
     set(id_type_t id) {
-        uint8_t mask = (uint8_t)(0x01) << (id & 0x07);
-        bitset_[id >> 3] |= mask;
+        unsigned char mask = (unsigned char)(0x01) << (id & 0x07);
+        bitset_[id >> 3].fetch_or(mask);
     }
 
     inline void
     clear(id_type_t id) {
-        uint8_t mask = (uint8_t)(0x01) << (id & 0x07);
-        bitset_[id >> 3] &= ~mask;
+        unsigned char mask = (unsigned char)(0x01) << (id & 0x07);
+        bitset_[id >> 3].fetch_and(~mask);
     }
 
     size_t
@@ -119,7 +119,7 @@ class ConcurrentBitset {
 
  private:
     size_t size_; // number of bits
-    std::vector<uint8_t> bitset_;
+    std::vector<std::atomic<uint8_t>> bitset_;
 };
 
 bool operator==(const ConcurrentBitset& lhs, const ConcurrentBitset& rhs);

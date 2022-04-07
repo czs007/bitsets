@@ -17,7 +17,6 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
-#include <bitset>
 
 namespace faiss {
 
@@ -35,17 +34,17 @@ class ConcurrentBitset2 {
  std::ostream& operator<<(std::ostream& os, const ConcurrentBitset2& bitset);
 
  public:
-    using id_type_t = int64_t;
 
+    using id_type_t = int64_t;
     explicit ConcurrentBitset2(size_t size, uint8_t init_value = 0)
-    : size_(size), bitset_(((size + 64 - 1) >> 6)) {
+    : size_(size), bitset_(((size + 8 - 1) >> 3)) {
         if (init_value) {
-            memset(mutable_data(), init_value, (size_ + 64 - 1) >> 6);
+            memset(mutable_data(), init_value, (size_ + 8 - 1) >> 3);
         }
     }
 
-    explicit ConcurrentBitset2(size_t size, const uint8_t* data) : size_(size), bitset_(((size + 64 - 1) >> 6)) {
-        memcpy(mutable_data(), data, (size_ + 64 - 1) >> 6);
+    explicit ConcurrentBitset2(size_t size, const uint8_t* data) : size_(size), bitset_(((size + 8 - 1) >> 3)) {
+        memcpy(mutable_data(), data, (size_ + 8 - 1) >> 3);
     }
 
     ConcurrentBitset2&
@@ -77,25 +76,20 @@ class ConcurrentBitset2 {
 
     inline bool
     test(id_type_t id) const {
-        uint64_t mask = (uint64_t)(0x01) << (id & 0x3f);
-        return (bitset_[id >> 6] & mask);
+        uint8_t mask = (uint8_t)(0x01) << (id & 0x07);
+        return bitset_[id >> 3] & mask;
     }
 
     inline void
     set(id_type_t id) {
-        uint64_t mask = (uint64_t)(0x01) << (id & 0x3f);
-	std::cout<<"mask:"<<mask<<std::endl;
-	std::cout<<"mask2:"<<0x3f<<std::endl;
-	std::cout<<"befe:"<<std::bitset<64>(bitset_[id>>6])<<std::endl;
-        bitset_[id >> 6] |= (mask);
-	//std::cout<<"afte:"<<bitset_[id>>6]<<std::endl;
-	std::cout<<"afte:"<<std::bitset<64>(bitset_[id>>6])<<std::endl;
+        uint8_t mask = (uint8_t)(0x01) << (id & 0x07);
+        bitset_[id >> 3] |= mask;
     }
 
     inline void
     clear(id_type_t id) {
-        uint64_t mask = (uint64_t)(0x01) << (id & 0x3f);
-        bitset_[id >> 6] &= ~mask;
+        uint8_t mask = (uint8_t)(0x01) << (id & 0x07);
+        bitset_[id >> 3] &= ~mask;
     }
 
     size_t
@@ -108,7 +102,7 @@ class ConcurrentBitset2 {
 
     inline size_t
     byte_size() const {
-        return ((size_ + 64 - 1) >> 6);
+        return ((size_ + 8 - 1) >> 3);
     }
 
     inline const uint8_t*
@@ -125,7 +119,7 @@ class ConcurrentBitset2 {
 
  private:
     size_t size_; // number of bits
-    std::vector<std::atomic<uint64_t>> bitset_;
+    std::vector<uint8_t> bitset_;
 };
 
 bool operator==(const ConcurrentBitset2& lhs, const ConcurrentBitset2& rhs);
