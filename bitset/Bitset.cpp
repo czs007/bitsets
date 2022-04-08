@@ -257,6 +257,69 @@ for (size_t i = 0; i < remain; i++) {
 return *this;
 }
 
+/*
+bool 
+ConcurrentBitset::all() const{
+
+auto p_data = reinterpret_cast<const uint64_t *>(data());
+auto len = size() >> 3;
+
+auto popcount8 = [&](uint8_t x) -> int{
+    x = (x & 0x55) + ((x >> 1) & 0x55);
+    x = (x & 0x33) + ((x >> 2) & 0x33);
+    x = (x & 0x0F) + ((x >> 4) & 0x0F);
+    return x;
+};
+
+for (size_t i = 0; i < len; ++i) {
+	if(*p_data){
+		return true;
+	}
+}
+
+auto p_byte = data() + (len << 3);
+for (auto i = (len << 3); i < size(); ++i) {
+    if(*p_byte) {
+	return true;
+    }
+    p_byte++;
+}
+return false;
+
+}
+
+
+bool 
+ConcurrentBitset::any() const{
+
+auto p_data = reinterpret_cast<const uint64_t *>(data());
+auto len = size() >> 3;
+
+auto popcount8 = [&](uint8_t x) -> int{
+    x = (x & 0x55) + ((x >> 1) & 0x55);
+    x = (x & 0x33) + ((x >> 2) & 0x33);
+    x = (x & 0x0F) + ((x >> 4) & 0x0F);
+    return x;
+};
+
+for (size_t i = 0; i < len; ++i) {
+	if(*p_data){
+		return true;
+	}
+}
+
+auto p_byte = data() + (len << 3);
+for (auto i = (len << 3); i < size(); ++i) {
+    if(*p_byte) {
+	return true;
+    }
+    p_byte++;
+}
+return false;
+
+}
+*/
+
 size_t
 ConcurrentBitset::count() const {
 size_t ret = 0;

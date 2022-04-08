@@ -86,6 +86,26 @@ class ConcurrentBitset {
         bitset_[id >> 3].fetch_or(mask);
     }
 
+    /*
+    bool
+    all() const;
+
+    inline bool
+    any() const;
+
+    inline bool
+    none() const {
+	    return !any();
+    }
+    */
+
+    inline bool
+    empty() const {
+	    return size_ == 0;
+    }
+
+
+    // todo rename to reset
     inline void
     clear(id_type_t id) {
         unsigned char mask = (unsigned char)(0x01) << (id & 0x07);

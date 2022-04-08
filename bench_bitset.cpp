@@ -24,8 +24,8 @@
 
 using MapType = std::map<std::string, std::function<double(int)>>;
 
-//using ConcurrentBitset2 = bitsets::ConcurrentBitset2;
-using ConcurrentBitset = bitsets::ConcurrentBitset2;
+using ConcurrentBitset = bitsets::ConcurrentBitset;
+//using ConcurrentBitset = bitsets::ConcurrentBitset2;
 using BitsetType = bitsets::BitsetType;
 using BitsetView = bitsets::BitsetView;
 
@@ -60,6 +60,7 @@ std::string view_to_string(BitsetView & view);
 
 double test_dummy_func(int round);
 
+double test_boost_dynamic_bitset_test(int round);
 double test_boost_dynamic_bitset_clear(int round);
 double test_boost_dynamic_bitset_set(int round);
 double test_boost_dynamic_bitset_or(int round);
@@ -69,6 +70,7 @@ double test_boost_dynamic_bitset_or_assign(int round);
 double test_boost_dynamic_bitset_and_assign(int round);
 
 
+double test_concurrent_bitset_test(int round);
 double test_concurrent_bitset_clear(int round);
 double test_concurrent_bitset_set(int round);
 double test_concurrent_bitset_or(int round);
@@ -134,6 +136,19 @@ double test_concurrent_bitset_clear(int round){
 	for (int i =0; i < round; i++){
 		for (int j =0; j<N_BITS; j++){
 		  l.clear(ConcurrentBitset::id_type_t(j));
+		}
+	}	
+	return timer.get_overall_seconds();
+}
+
+
+double test_concurrent_bitset_test(int round){
+	auto l = ConcurrentBitset(N_BITS, DatasetL.data());
+    	Timer timer;
+
+	for (int i =0; i < round; i++){
+		for (int j =0; j<N_BITS; j++){
+		  l.test(ConcurrentBitset::id_type_t(j));
 		}
 	}	
 	return timer.get_overall_seconds();
@@ -265,7 +280,7 @@ double test_boost_dynamic_bitset_and(int round){
 
 double test_boost_dynamic_bitset_and_assign(int round){
 	auto viewL = BitsetView(DatasetR.data(), N_BITS);
- 	 auto x = view_to_string(viewL);
+ 	auto x = view_to_string(viewL);
   	auto l = BitsetType(x);
 
 	auto viewR = BitsetView(DatasetR.data(), N_BITS);
@@ -277,6 +292,21 @@ double test_boost_dynamic_bitset_and_assign(int round){
 		l&= r;
 	}	
 
+	return timer.get_overall_seconds();
+}
+
+
+double test_boost_dynamic_bitset_test(int round){
+	auto viewL = BitsetView(DatasetR.data(), N_BITS);
+ 	auto x = view_to_string(viewL);
+  	auto l = BitsetType(x);
+
+	Timer timer;
+	for (int i =0; i < round*1000; i++){
+		for (int j =0; j<N_BITS; j++){
+		  l.test(j);
+		}
+	}	
 	return timer.get_overall_seconds();
 }
 
@@ -367,23 +397,25 @@ void print_end(int mode, std::string func_name, double secs) {
 
 
 MapType BoostFuncMap = {
-	{ "clear", test_boost_dynamic_bitset_clear},
+	{ "reset", test_boost_dynamic_bitset_clear},
 	{ "set", test_boost_dynamic_bitset_set},
 	{ "|", test_boost_dynamic_bitset_or},
 	{ "|=", test_boost_dynamic_bitset_or_assign},
 	{ "&", test_boost_dynamic_bitset_and},
 	{ "&=", test_boost_dynamic_bitset_and_assign},
 	{ "flip", test_boost_dynamic_bitset_flip},
+	{ "test", test_boost_dynamic_bitset_test},
 };
 
 MapType ConcurrentFuncMap = {
-	{ "clear", test_concurrent_bitset_clear},
+	{ "reset", test_concurrent_bitset_clear},
 	{ "set", test_concurrent_bitset_set},
 	{ "|", test_concurrent_bitset_or},
 	{ "|=", test_concurrent_bitset_or_assign},
 	{ "&", test_concurrent_bitset_and},
 	{ "&=", test_concurrent_bitset_and_assign},
 	{ "flip",test_concurrent_bitset_flip},
+	{ "test", test_concurrent_bitset_test},
 };
 
 void boost_test(std::string func_name, int round){
@@ -430,13 +462,14 @@ int main() {
   std::cout<<"GenerateDataset done"<<std::endl;
 
   std::vector<std::string> keys {
-	"clear",
+//	"reset",
 	"flip",
-	"set",
+//	"set",
 	"|=",
 	"|",
 	"&=",
 	"&",
+	"test",
   };
 
   std::cout<<"Boost dynamic bitset:"<<std::endl;
